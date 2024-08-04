@@ -5,7 +5,11 @@ pipeline {
             steps {
                 echo 'Git Clone start'
                 git branch: 'main', url: 'https://github.com/Ludo-SMP/ludo-backend.git'
+
+                // des: private repo 접근을 위한 인증을 젠킨스 선언형 스크립트로 진행
+                // notice: Jenkins Credential Plugin 을 설치 및 설정해야 함
 		withCredentials([GitUsernamePassword(credentialsId: 'submodule_configuration', gitToolName: 'Default')]) {
+		            // des: ludo-backend configuration submodule 을 최신화
                     echo 'submodule fetching start'
                     sh 'git submodule init'
                     sh 'git submodule update'
@@ -15,16 +19,16 @@ pipeline {
             }
         }
         
-	# deprecated
-        # stage('Test') {
-        #    steps {
-        #        dir('./') {
-        #            echo 'Test start'
-        #            sh './gradlew clean test'
-        #            echo 'Test success'
-        #        }
-        #    }
-        #}
+// 	    deprecated
+//         stage('Test') {
+//             steps {
+//                 dir('./') {
+//                     echo 'Test start'
+//                     sh './gradlew clean test'
+//                     echo 'Test success'
+//                 }
+//             }
+//         }
         
         stage('Build') {
             steps {
@@ -42,12 +46,18 @@ pipeline {
                     sshagent(credentials:['ludo-backend-ssh']) {
                         echo 'Deploy start'
 
-                        # 그라파나, 프로메테우스 재실행 쉘 스크립트 필요 + 환경변수
-                        # 1. docker hub push, 모니터링 인스턴스 docker hub pull
-                        # 2(V). docker-compose.yaml 파일을 그냥 배포, 인스턴스에서 쉘 스크립트 실행
-                        sh 'scp study-matching-platform-0.0.1-SNAPSHOT.jar archa@35.185.251.89:/home/archa'
+//                         Deploy - Monitoring
+//                         그라파나, 프로메테우스 재실행 쉘 스크립트 필요 + 환경변수
+//                         1. docker hub push, 모니터링 인스턴스 docker hub pull
+//                         2(V). docker-compose.yaml 파일을 그냥 배포, 인스턴스에서 쉘 스크립트 실행
+
+                        // des: jar 파일 배포
+                        sh 'scp study-matching-platform-0.0.1-SNAPSHOT.jar ludo@35.227.190.157:/home/build'
                         echo 'Deploy end'
-                        sh 'ssh -t archa@35.185.251.89 /home/archa/run.sh'
+
+                        // des: 해당 경로의 자동화 스크립트 run.sh를 실행하여 애플리케이션을 구동
+                        // notice: 해당 경로에 run.sh 파일이 존재해야 함
+                        sh 'ssh -t ludo@35.227.190.157 /home/build/run.sh'
                     }
                 }
             }
