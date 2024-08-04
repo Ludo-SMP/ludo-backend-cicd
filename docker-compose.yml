@@ -1,0 +1,11 @@
+version: "3"
+services:
+  jenkins:
+    image: jenkins/jenkins:lts-jdk17
+    container_name: ludo-jenkins
+    user: root
+    volumes:
+      - ./jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sh # Docker Out Of Docker 를 위해 호스트의 도커 소켓 파일을 컨테이너에 공유합니다.
+    ports:
+      - "8080:8080"
